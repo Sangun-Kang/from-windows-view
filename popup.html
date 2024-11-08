@@ -3,42 +3,38 @@
   <head>
     <style>
       body {
-        min-width: 200px;
-        min-height: 100px;
+        min-width: 150px;
+        min-height: 80px;
         margin: 0;
         padding: 20px;
         background-color: #f0f2f5;
         font-family: Arial, sans-serif;
         text-align: center;
       }
-
+      #toggleButton {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      #toggleButton.active {
+        background-color: #28a745;
+      }
+      #toggleButton:hover {
+        background-color: #0056b3;
+      }
       h1 {
         font-size: 18px;
         margin-bottom: 20px;
         color: #333;
       }
-
-      #toggleButton {
-        padding: 10px 20px;
-        font-size: 16px;
-        background-color: #0078d7;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-      }
-
-      #toggleButton.active {
-        background-color: #d70022;
-      }
-
-      #toggleButton:hover {
-        opacity: 0.9;
-      }
     </style>
   </head>
   <body>
-    <h1>Windows-wise</h1>
+    <h1>Windows-wise Renderer</h1>
     <button id="toggleButton">Loading...</button>
     <script src="popup.js"></script>
   </body>

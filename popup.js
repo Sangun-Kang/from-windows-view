@@ -1,57 +1,47 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const button = document.getElementById("toggleButton")
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+  const toggleButton = document.getElementById("toggleButton")
 
-  // 현재 페이지에서 효과가 적용되어 있는지 확인
-  let [{ result: isActive }] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: () => !!window.isWindowsWiseActive,
+  // 현재 탭의 상태를 가져옴
+  chrome.runtime.sendMessage({ type: "getStatus" }, (response) => {
+    const isActive = response.isActive
+    updateButton(isActive)
   })
 
-  updateButton(isActive)
+  toggleButton.addEventListener("click", async () => {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
 
-  button.addEventListener("click", async () => {
-    try {
-      // 효과 토글 및 새로운 상태 반환
-      let [{ result: newIsActive }] = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-          if (!window.isWindowsWiseActive) {
-            const style = document.createElement("style")
-            style.id = "windowsWiseStyle"
-            style.innerHTML = `
-              * {
-                -webkit-font-smoothing: none !important;
-                text-shadow: 0 0 1px rgba(0,0,0,0.5);
-              }
-            `
-            document.head.appendChild(style)
-            window.isWindowsWiseActive = true
-          } else {
-            const style = document.getElementById("windowsWiseStyle")
-            if (style) {
-              style.remove()
-            }
-            window.isWindowsWiseActive = false
-          }
-          return window.isWindowsWiseActive
-        },
-      })
-
-      updateButton(newIsActive)
-    } catch (error) {
-      console.error("오류 발생:", error)
-      alert("오류가 발생했습니다. 콘솔을 확인하세요.")
+    // chrome:// URL인지 확인
+    if (
+      tab.url.startsWith("chrome://") ||
+      tab.url.startsWith("chrome-extension://")
+    ) {
+      alert("이 확장 프로그램은 이 페이지에서 동작하지 않습니다.")
+      return
     }
+
+    // 스크립트 주입 및 상태 토글
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: tab.id },
+        files: ["contentScript.js"],
+      },
+      () => {
+        // 상태 업데이트를 위해 콘텐츠 스크립트에서 메시지를 보냄
+        chrome.tabs.sendMessage(tab.id, { type: "toggle" }, (response) => {
+          const isActive = response.isActive
+          updateButton(isActive)
+        })
+      }
+    )
   })
 
   function updateButton(isActive) {
     if (isActive) {
-      button.textContent = "Turn OFF Windows-wise"
-      button.classList.add("active")
+      toggleButton.textContent = "ON"
+      toggleButton.classList.add("active")
     } else {
-      button.textContent = "Turn ON Windows-wise"
-      button.classList.remove("active")
+      toggleButton.textContent = "OFF"
+      toggleButton.classList.remove("active")
     }
   }
 })
